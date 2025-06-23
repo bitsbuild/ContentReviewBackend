@@ -1,7 +1,11 @@
 from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
+import os
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 SECRET_KEY = 'django-insecure-c(2s+_s6)v^d1!srjif9sgp@fgix25e9p2h__bt%^h5+3waflv'
-DEBUG = True
+DEBUG = False
 ALLOWED_HOSTS = ['content-review.onrender.com']
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -65,7 +69,6 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Kolkata'
 USE_TZ = True
 USE_I18N = True
-STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

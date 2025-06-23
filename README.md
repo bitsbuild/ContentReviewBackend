@@ -19,9 +19,11 @@ This backend project supports token-based authentication, secure review submissi
 - 🔐 Token-based user registration and login
 - 🎥 CRUD for streaming content, artists, and platforms
 - ✍️ One-review-per-user restriction per content
-- 🔎 Advanced filtering and search support
-- 🧾 Custom permissions: Admin-only writes & user-owned review control
-- 🚦 Request throttling on all resource types
+- 🔎 Filtering and search on most endpoints
+- 📘 Human-readable response fields (e.g., names instead of IDs)
+- 🚦 View-specific throttling and per-action limits
+- 📄 Multiple pagination strategies supported
+- ⚙️ SQLite + WhiteNoise + Render deployment-ready setup
 
 ---
 
@@ -145,9 +147,26 @@ Deletes the currently authenticated user.
 
 Supports:
 
-* Pagination: `?page=1`
 * Filtering: `?artists=<id>&content_platform=<id>&content_released=true`
 * Search: `?search=platform_name` or `?search=artist_name`
+* Pagination options:
+
+  * Page-based: `?p=2` or `?page=2`, `?size=5`
+  * Limit-offset: `?limit=5&start=10`
+  * Cursor-based: `?autopage=<cursor_string>`
+
+##### 📘 Sample Response:
+
+```json
+{
+  "content_name": "Inception",
+  "content_platform": "Netflix",
+  "artists": ["Hans Zimmer", "Leonardo DiCaprio"],
+  "reviews": [...]
+}
+```
+
+> 📌 All related fields are shown as names instead of raw IDs.
 
 ---
 
@@ -174,17 +193,15 @@ Supports:
 🔒 Requires Token Auth
 🔒 Write Access: Admin Only
 
+Supports:
+
+* Search: `?search=zimmer`
+
 ```json
 {
   "artist_name": "Hans Zimmer",
   "artist_about": "Film Composer"
 }
-```
-
-Search supported:
-
-```
-?search=zimmer
 ```
 
 ---
@@ -195,18 +212,15 @@ Search supported:
 🔒 Requires Token Auth
 🔒 Write Access: Admin Only
 
+Supports:
+
+* Search: `?search=netflix`
+
 ```json
 {
   "platform_name": "Netflix",
-  "platform_about": "Streaming service",
   "platform_url": "https://netflix.com"
 }
-```
-
-Search supported:
-
-```
-?search=netflix
 ```
 
 ---
@@ -220,6 +234,10 @@ Supports:
 
 * Filtering: `?review_movie=<id>&review_stars=5`
 * Search: `?search=Inception`
+
+> 📌 Review response shows `review_user` and `review_movie` as names.
+
+---
 
 #### 🔹 Create Review
 
@@ -236,6 +254,7 @@ Supports:
 ```
 
 > 📌 Each user can post only one review per content (enforced via DB constraint).
+> 📌 Only the creator can update/delete their review.
 
 ---
 
@@ -250,32 +269,47 @@ Supports:
 
 ---
 
-## 🛡️ Permissions Overview
+## 📄 Pagination Strategies
 
-| Resource                    | Read Access      | Write Access                    |
-| --------------------------- | ---------------- | ------------------------------- |
-| Users (create/token/delete) | Register: Open   | 🔒 Delete: Token Required       |
-| Content / Platform / Artist | 🔒 Auth Required | 🔒 Admin Only (`is_staff=True`) |
-| Reviews                     | 🔒 Auth Required | 🔒 Only creator can edit/delete |
+| Type         | Example URL Params             | Notes                                 |
+| ------------ | ------------------------------ | ------------------------------------- |
+| Page Number  | `?page=2` or `?p=2`, `?size=5` | Default strategy. Supports `p=` alias |
+| Limit-Offset | `?limit=5&start=10`            | Offset-based pagination               |
+| Cursor-Based | `?autopage=<cursor>`           | Uses `content_created` for ordering   |
 
-📌 *All API access is secured via token authentication.*
-No anonymous access is allowed — not even for GET requests.
-
-> Admins cannot modify others’ reviews. Review ownership is enforced.
+> Max page size: **30 items**
+> Invalid page requests return a clear error message.
 
 ---
 
 ## 🚦 Throttling
 
-Custom throttle classes are applied for:
+Throttle behavior is enforced globally and per-view:
 
-* User actions (create/token/delete)
-* Content
-* Platforms
-* Artists
-* Reviews
+| Scope                  | Rate             |
+| ---------------------- | ---------------- |
+| Anonymous (`anon`)     | 30 requests/min  |
+| Authenticated (`user`) | 60 requests/min  |
+| Content Views          | 60 requests/min  |
+| Platform Views         | 60 requests/min  |
+| Artist Views           | 60 requests/min  |
+| Review (list)          | 60 requests/min  |
+| Review (write)         | 10 requests/hour |
 
-This ensures fair usage and protects against abuse.
+> These settings are managed using custom throttle classes and scoped via settings.
+
+---
+
+## 🛡️ Permissions Overview
+
+| Resource                    | Read Access          | Write Access                    |
+| --------------------------- | -------------------- | ------------------------------- |
+| Users (create/token/delete) | Open (with throttle) | 🔒 Delete: Token Required       |
+| Content / Platform / Artist | 🔒 Auth Required     | 🔒 Admin Only (`is_staff=True`) |
+| Reviews                     | 🔒 Auth Required     | 🔒 Only creator can edit/delete |
+
+> ✅ Permissions are enforced at both view and object level using DRF permissions.
+> ❌ No anonymous access is permitted — not even for viewing data.
 
 ---
 
@@ -285,10 +319,9 @@ This ensures fair usage and protects against abuse.
 * **Django 5.x**
 * **Django REST Framework**
 * **SQLite** (used in both development and deployment)
+* **WhiteNoise** (for static file handling)
 * **Render.com** (deployment)
-* **Postman** (API testing)
-
-> 📌 Note: This project uses SQLite even on Render. For scalable production usage, integrating PostgreSQL is recommended.
+* **Postman** (for API testing)
 
 ---
 

@@ -2,7 +2,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-c(2s+_s6)v^d1!srjif9sgp@fgix25e9p2h__bt%^h5+3waflv'
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['content-review.onrender.com']
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

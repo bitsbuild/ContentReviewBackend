@@ -5,6 +5,7 @@ from app.pagination import ContentsCPagination
 from app.serializers import ContentSerializer,ContentReviewSerializer,ArtistsSerializer,StreamingPlatformSerializer
 from app.permissions import AdminOrReadOnly,ReviewPermissions 
 from app.throttling import ContentThrottle,PlatformThrottle,ArtistThrottle,ReviewThrottle
+import statistics
 class ContentViewSet(viewsets.ModelViewSet):
     queryset = ContentDetails.objects.all()
     serializer_class = ContentSerializer
@@ -37,5 +38,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
     filterset_fields=['review_movie','review_stars','review_user']
     search_fields = ['review_movie__content_name']
     throttle_classes = [ReviewThrottle]
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        movie = request.data['review_movie']
+        ratings = list(ContentReviews.objects.filter(review_movie=movie).values_list('review_stars',flat=True))
+        movie_stars = statistics.mean(ratings)
+        content = ContentDetails.objects.get(pk=movie)
+        content.content_rating = movie_stars
+        content.save()
     def perform_create(self, serializer):
         serializer.save(review_user=self.request.user)

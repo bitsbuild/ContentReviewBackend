@@ -27,6 +27,7 @@ class ContentDetails(models.Model):
     content_name = models.CharField(max_length=70)
     content_description = models.CharField(max_length=350)
     content_released = models.BooleanField(default=True)
+    content_rating = models.FloatField(editable=False,default=0)
     content_created = models.DateTimeField(auto_now_add=True,editable=False)
     content_updated = models.DateTimeField(auto_now=True,editable=False)
     content_platform = models.ForeignKey(StreamingPlatform,on_delete=models.CASCADE,related_name="content")

@@ -5,6 +5,9 @@ from app.pagination import ContentsCPagination
 from app.serializers import ContentSerializer,ContentReviewSerializer,ArtistsSerializer,StreamingPlatformSerializer
 from app.permissions import AdminOrReadOnly,ReviewPermissions 
 from app.throttling import ContentThrottle,PlatformThrottle,ArtistThrottle,ReviewThrottle
+import statistics
+from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK,HTTP_400_BAD_REQUEST
 class ContentViewSet(viewsets.ModelViewSet):
     queryset = ContentDetails.objects.all()
     serializer_class = ContentSerializer
@@ -37,5 +40,19 @@ class ReviewViewSet(viewsets.ModelViewSet):
     filterset_fields=['review_movie','review_stars','review_user']
     search_fields = ['review_movie__content_name']
     throttle_classes = [ReviewThrottle]
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            movie = request.data['review_movie']
+            ratings = list(ContentReviews.objects.filter(review_movie=movie).values_list('review_stars',flat=True))
+            movie_stars = statistics.mean(ratings)
+            content = ContentDetails.objects.get(pk=movie)
+            content.content_rating = movie_stars
+            content.save()
+            return Response({"Status":"Success"},status=HTTP_200_OK)
+        except Exception as e:
+            return Response({"Status":"Failed","Error":str(e)},status=HTTP_400_BAD_REQUEST)
     def perform_create(self, serializer):
         serializer.save(review_user=self.request.user)

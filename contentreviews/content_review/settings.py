@@ -6,7 +6,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 SECRET_KEY = 'django-insecure-c(2s+_s6)v^d1!srjif9sgp@fgix25e9p2h__bt%^h5+3waflv'
 DEBUG = False
-ALLOWED_HOSTS = ['content-review.onrender.com']
+ALLOWED_HOSTS = ['content-review.onrender.com','127.0.0.1','localhost']
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

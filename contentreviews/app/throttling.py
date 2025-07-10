@@ -6,9 +6,10 @@ class PlatformThrottle(UserRateThrottle):
 class ArtistThrottle(UserRateThrottle):
     scope = 'artist_throttle'
 class ReviewThrottle(UserRateThrottle):
-    def get_rate(self):
-        action = getattr(self.view,'action',None)
+    def allow_request(self, request, view):
+        action = getattr(view, 'action', None)
         if action == 'list':
-            return '60/min'
+            self.scope = 'review_list'
         else:
-            return '10/hour'
+            self.scope = 'review_other'
+        return super().allow_request(request, view)

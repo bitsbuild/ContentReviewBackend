@@ -139,6 +139,7 @@ Deletes the currently authenticated user.
 ---
 
 ### 🎞️ Content Endpoints
+As Per Latest Update Rating Based On Average Numeric Rating Of All Reviews For The Particular Piece Will Also Be Up For Display In "content_rating" Field For Content Endpoints In GET Method.
 
 #### 🔹 List Content
 
